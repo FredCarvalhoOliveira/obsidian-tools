@@ -20,10 +20,12 @@ This is useful for quickly creating connections between your notes and building 
 
 ### How to use
 
-1.  Place the `find_links.py` script anywhere on your system.
-2.  Open a terminal.
-3.  Run the script with the path to your Obsidian vault as an argument:
+1.  Clone the repo
+    ```bash
+    git clone git@github.com:FredCarvalhoOliveira/obsidian-tools.git
+    ```
+2.  Run the script with the path to your Obsidian vault as an argument:
     ```bash
     python find_links.py /path/to/your/vault
     ```
-4.  The script will show you potential links one by one and ask for your confirmation before making any changes.
+3.  The script will show you potential links one by one and ask for your confirmation before making any changes.
