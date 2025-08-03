@@ -8,6 +8,28 @@
 
 This repository contains tools to help manage an [Obsidian](https://obsidian.md/) vault.
 
+
+## Installation
+
+Install UV
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Clone the repo
+```bash
+git clone git@github.com:FredCarvalhoOliveira/obsidian-tools.git 
+cd obsidian-tools
+```
+
+Install dependencies
+```bash
+uv sync
+```
+
+
+
+
 ## `find_links.py`
 
 This Python script helps you find potential links between your notes that you might have missed.
@@ -18,14 +40,12 @@ The script scans all your markdown files in the specified vault directory. If it
 
 This is useful for quickly creating connections between your notes and building a more networked knowledge base.
 
-### How to use
 
-1.  Clone the repo
+
+
+### How to use
+1.  Run the script with the path to your Obsidian vault as an argument:
     ```bash
-    git clone git@github.com:FredCarvalhoOliveira/obsidian-tools.git
+    uv run find_links.py /path/to/your/vault
     ```
-2.  Run the script with the path to your Obsidian vault as an argument:
-    ```bash
-    python find_links.py /path/to/your/vault
-    ```
-3.  The script will show you potential links one by one and ask for your confirmation before making any changes.
+2.  The script will show you potential links one by one and ask for your confirmation before making any changes.
