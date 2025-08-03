@@ -22,23 +22,35 @@ def find_markdown_links(vault_path):
         with open(os.path.join(vault_path, md_file), "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Find all existing wikilinks
-        existing_links = set()
-        for match in re.finditer(r"\[\[(.+?)\]\]", content):
-            existing_links.add(match.group(1).split("|")[0].lower())
+        linked_regions = []
+        for match in re.finditer(r"\[\[.*?\]\]", content):
+            linked_regions.append((match.start(), match.end()))
 
-        # Remove YAML frontmatter
+        frontmatter_end_pos = 0
         if content.startswith("---"):
             end_of_frontmatter = content.find("---", 3)
             if end_of_frontmatter != -1:
-                content = content[end_of_frontmatter + 3 :]
+                frontmatter_end_pos = end_of_frontmatter + 3
+
+        searchable_content_list = list(content)
+
+        for i in range(frontmatter_end_pos):
+            if searchable_content_list[i] != "\n":
+                searchable_content_list[i] = " "
+
+        for start, end in linked_regions:
+            for i in range(start, end):
+                if searchable_content_list[i] != "\n":
+                    searchable_content_list[i] = " "
+
+        searchable_content = "".join(searchable_content_list)
 
         for name in filename_map:
-            if name == os.path.splitext(md_file)[0].lower() or name in existing_links:
+            if name == os.path.splitext(md_file)[0].lower():
                 continue
 
             pattern = rf"\b{re.escape(name)}\b"
-            matches = list(re.finditer(pattern, content.lower()))
+            matches = list(re.finditer(pattern, searchable_content.lower()))
 
             if matches:
                 links.append((filename_map[name], matches, content))
@@ -61,6 +73,8 @@ if __name__ == "__main__":
     for source, targets in links.items():
         with open(os.path.join(args.vault_path, source), "r", encoding="utf-8") as f:
             content = f.read()
+
+        replacements = []
 
         for target_file, matches, original_content in targets:
             print(
@@ -88,7 +102,17 @@ if __name__ == "__main__":
 
                 if confirm.lower() == "y":
                     original_word = original_content[match.start() : match.end()]
-                    content = content.replace(original_word, f"[[{original_word}]]")
+                    replacements.append((match.start(), match.end(), original_word))
 
-        with open(os.path.join(args.vault_path, source), "w", encoding="utf-8") as f:
-            f.write(content)
+        if replacements:
+            # Sort replacements by start position in reverse order
+            replacements.sort(key=lambda x: x[0], reverse=True)
+            content_list = list(content)
+            for start, end, word in replacements:
+                content_list[start:end] = list(f"[[{word}]]")
+
+            updated_content = "".join(content_list)
+            with open(
+                os.path.join(args.vault_path, source), "w", encoding="utf-8"
+            ) as f:
+                f.write(updated_content)
