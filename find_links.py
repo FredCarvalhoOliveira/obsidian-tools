@@ -14,41 +14,34 @@ class Colors:
 
 def find_markdown_links(vault_path):
     md_files = [f for f in os.listdir(vault_path) if f.endswith(".md")]
-
     filename_map = {os.path.splitext(f)[0].lower(): f for f in md_files}
-
     results = {}
 
     for md_file in md_files:
         links = []
-
         with open(os.path.join(vault_path, md_file), "r", encoding="utf-8") as f:
             content = f.read()
 
-            for name in filename_map:
-                if name == os.path.splitext(md_file)[0].lower():
-                    continue
+        # Find all existing wikilinks
+        existing_links = set()
+        for match in re.finditer(r"\[\[(.+?)\]\]", content):
+            existing_links.add(match.group(1).split("|")[0].lower())
 
-                pattern = rf"\b{re.escape(name)}\b"
-                matches = list(re.finditer(pattern, content.lower()))
+        # Remove YAML frontmatter
+        if content.startswith("---"):
+            end_of_frontmatter = content.find("---", 3)
+            if end_of_frontmatter != -1:
+                content = content[end_of_frontmatter + 3 :]
 
-                filtered_matches = []
-                for match in matches:
-                    start_pos = match.start()
-                    end_pos = match.end()
+        for name in filename_map:
+            if name == os.path.splitext(md_file)[0].lower() or name in existing_links:
+                continue
 
-                    is_already_linked = (
-                        start_pos >= 2
-                        and end_pos + 2 <= len(content)
-                        and content[start_pos - 2 : start_pos] == "[["
-                        and content[end_pos : end_pos + 2] == "]]"
-                    )
+            pattern = rf"\b{re.escape(name)}\b"
+            matches = list(re.finditer(pattern, content.lower()))
 
-                    if not is_already_linked:
-                        filtered_matches.append(match)
-
-                if filtered_matches:
-                    links.append((filename_map[name], filtered_matches, content))
+            if matches:
+                links.append((filename_map[name], matches, content))
 
         if links:
             results[md_file] = links
@@ -66,8 +59,6 @@ if __name__ == "__main__":
     links = find_markdown_links(args.vault_path)
 
     for source, targets in links.items():
-        # print(f"\n{Colors.CYAN}In {Colors.BOLD}{source}{Colors.RESET}:")
-
         with open(os.path.join(args.vault_path, source), "r", encoding="utf-8") as f:
             content = f.read()
 
