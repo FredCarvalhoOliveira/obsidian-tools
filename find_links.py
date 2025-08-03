@@ -1,5 +1,6 @@
 import os
 import re
+import argparse
 
 
 class Colors:
@@ -11,8 +12,8 @@ class Colors:
     RESET = "\033[0m"
 
 
-def find_markdown_links():
-    md_files = [f for f in os.listdir(".") if f.endswith(".md")]
+def find_markdown_links(vault_path):
+    md_files = [f for f in os.listdir(vault_path) if f.endswith(".md")]
 
     filename_map = {os.path.splitext(f)[0].lower(): f for f in md_files}
 
@@ -21,7 +22,7 @@ def find_markdown_links():
     for md_file in md_files:
         links = []
 
-        with open(md_file, "r", encoding="utf-8") as f:
+        with open(os.path.join(vault_path, md_file), "r", encoding="utf-8") as f:
             content = f.read()
 
             for name in filename_map:
@@ -56,12 +57,18 @@ def find_markdown_links():
 
 
 if __name__ == "__main__":
-    links = find_markdown_links()
+    parser = argparse.ArgumentParser(
+        description="Find potential links in an Obsidian vault."
+    )
+    parser.add_argument("vault_path", help="The path to the Obsidian vault.")
+    args = parser.parse_args()
+
+    links = find_markdown_links(args.vault_path)
 
     for source, targets in links.items():
         # print(f"\n{Colors.CYAN}In {Colors.BOLD}{source}{Colors.RESET}:")
 
-        with open(source, "r", encoding="utf-8") as f:
+        with open(os.path.join(args.vault_path, source), "r", encoding="utf-8") as f:
             content = f.read()
 
         for target_file, matches, original_content in targets:
@@ -92,5 +99,5 @@ if __name__ == "__main__":
                     original_word = original_content[match.start() : match.end()]
                     content = content.replace(original_word, f"[[{original_word}]]")
 
-        with open(source, "w", encoding="utf-8") as f:
+        with open(os.path.join(args.vault_path, source), "w", encoding="utf-8") as f:
             f.write(content)
