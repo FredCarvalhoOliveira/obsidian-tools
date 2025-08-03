@@ -2,7 +2,6 @@
 <p align="center">
   <img src="res/obsidian_logo.png" alt="Obsidian Logo" width="200"/>
 </p>
-</br>
 
 
 # Obsidian Tools
